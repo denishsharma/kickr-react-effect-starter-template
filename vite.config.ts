@@ -2,6 +2,7 @@ import type { PluginOption } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite as tanStackRouter } from '@tanstack/router-plugin/vite'
+import unhead from '@unhead/addons/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
@@ -20,5 +21,6 @@ export default defineConfig({
       generatedRouteTree: './.generated/routeTree.gen.ts',
     }),
     react(),
+    unhead(),
   ],
 })
