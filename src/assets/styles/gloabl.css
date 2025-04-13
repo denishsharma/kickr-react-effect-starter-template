@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    @apply h-dvh w-full overflow-hidden flex flex-col;
+  }
+
+  #__app_root__ {
+    @apply grow;
+  }
+}
