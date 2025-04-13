@@ -27,6 +27,16 @@ export default antfu(
             propElementValues: 'always',
           },
         ],
+        'style/jsx-wrap-multilines': [
+          'error',
+          {
+            return: 'parens-new-line',
+            declaration: 'parens-new-line',
+            condition: 'parens-new-line',
+            logical: 'parens-new-line',
+            arrow: 'parens-new-line',
+          },
+        ],
       },
     },
     regexp: { level: 'warn' },
@@ -85,6 +95,7 @@ export default antfu(
       ],
       'unicorn/no-await-expression-member': 'error',
     },
+    ignores: ['./.generated/'],
   },
   {
     files: ['**/*.{tsx,jsx}'],
