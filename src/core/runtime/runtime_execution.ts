@@ -67,9 +67,8 @@ export function handleRuntimeExitResult<A, E>(self: Exit.Exit<A, ER | E>) {
  * It also logs any errors that occur during the processing
  * of the content.
  */
-export function manageEffect<A, E>(self: Effect.Effect<A, E, R>) {
+export function manageEffect<A, E>(self: Effect.Effect<A, E, Exclude<R, Scope.Scope>>) {
   return self.pipe(
-    Effect.scoped,
     /**
      * Tap into the effectful program to log any
      * errors that occur during the processing
@@ -122,6 +121,13 @@ export function manageEffect<A, E>(self: Effect.Effect<A, E, R>) {
   )
 }
 
+export function scopedManageEffect<A, E>(self: Effect.Effect<A, E, R>) {
+  return self.pipe(
+    Effect.scoped,
+    manageEffect,
+  )
+}
+
 /**
  * Options to run the effectful program in the application runtime.
  */
@@ -136,7 +142,7 @@ interface RuntimeExecutionOptions {
  */
 export function runPromise<A, E>(options?: RuntimeExecutionOptions) {
   return async (self: Effect.Effect<A, E, R>) => {
-    const result = await ApplicationRuntime.runPromiseExit(manageEffect(self), options)
+    const result = await ApplicationRuntime.runPromiseExit(scopedManageEffect(self), options)
     return handleRuntimeExitResult(result)
   }
 }
@@ -146,7 +152,13 @@ export function runPromise<A, E>(options?: RuntimeExecutionOptions) {
  */
 export function runSync<A, E>() {
   return (self: Effect.Effect<A, E, R>) => {
-    const result = ApplicationRuntime.runSyncExit(manageEffect(self))
+    const result = ApplicationRuntime.runSyncExit(scopedManageEffect(self))
     return handleRuntimeExitResult(result)
+  }
+}
+
+export function runFork<A, E>() {
+  return (self: Effect.Effect<A, E, R>) => {
+    return ApplicationRuntime.runFork(scopedManageEffect(self))
   }
 }
