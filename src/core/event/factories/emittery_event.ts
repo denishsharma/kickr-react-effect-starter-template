@@ -1,6 +1,5 @@
 import type { Brand } from 'effect'
 import type Emittery from 'emittery'
-import type { UnsubscribeFunction } from 'emittery'
 import type { Class } from 'type-fest'
 import type { EventHandlerParameters } from '~/core/event/types/event'
 import { isFunction, isUndefined } from '@sindresorhus/is'
@@ -10,7 +9,6 @@ import { defaultTo } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { useEffect } from 'react'
 import { _internals } from '~/core/constants/proto_marker'
-import { enforceSuccessType } from '~/core/effect/types/typed_effect'
 import { toSchemaParseError } from '~/core/error/utils/error_conversion'
 import { EMITTERY_EVENT_MARKER } from '~/core/event/constants/event_marker'
 import globalEmittery from '~/core/event/emittery'
@@ -86,7 +84,7 @@ function baseEmitteryEvent<
       })
     }
 
-    handle<E = never, O extends boolean = false>(...args: EventHandlerParameters<A, E, O>) {
+    handle<E = never>(...args: EventHandlerParameters<A, E>) {
       const [handler, options] = args
 
       return Effect.gen(this, function* () {
@@ -98,15 +96,15 @@ function baseEmitteryEvent<
 
         return yield* Effect.try({
           try: () => {
-            if (resolvedOptions.once) {
-              internals.emittery
-                .once(tag)
-                .then(data => handler(data).pipe(runPromise()))
+            const unsubscribe = internals.emittery.on(tag, (data: [A] extends [never] ? void : A) => {
+              return handler(data, unsubscribeFunction).pipe(runPromise())
+            })
+
+            function unsubscribeFunction() {
+              unsubscribe()
             }
 
-            return internals.emittery.on(tag, (data: [A] extends [never] ? void : A) => {
-              return handler(data).pipe(runPromise())
-            })
+            return unsubscribe
           },
           catch: EventHandlerError.fromUnknownError(
             {
@@ -116,19 +114,17 @@ function baseEmitteryEvent<
             `Unexpected error occurred while handling event '${tag}' with handler '${handler.name || resolvedOptions.id || '[anonymous]'}'.`,
           ),
         })
-      }).pipe(
-        enforceSuccessType<O extends true ? void : UnsubscribeFunction>(),
-      )
+      })
     }
 
-    useEvent<E = never, O extends boolean = false>(...args: EventHandlerParameters<A, E, O>) {
+    useEvent<E = never>(...args: EventHandlerParameters<A, E>) {
       // eslint-disable-next-line react-hooks/rules-of-hooks -- useEvent is a custom hook
       useEffect(() => {
         const [handler, options] = args
         const id = options?.id || nanoid()
 
         const cancel = Effect.gen(this, function* () {
-          const unsubscribe = yield* this.handle<E, O>(handler, defu(options, { id }))
+          const unsubscribe = yield* this.handle<E>(handler, defu(options, { id }))
           yield* Effect.addFinalizer(() => Effect.sync(() => {
             if (isFunction(unsubscribe)) {
               unsubscribe()
