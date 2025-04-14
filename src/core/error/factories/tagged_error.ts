@@ -2,6 +2,7 @@ import type { Brand } from 'effect'
 import type { Draft } from 'mutative'
 import type { Class, Spread } from 'type-fest'
 import type { ErrorCode } from '~/constants/error_code'
+import type { SchemaFromFields } from '~/core/schema/type'
 import { isFunction, isNullOrUndefined, isObject } from '@sindresorhus/is'
 import { defu } from 'defu'
 import { Data, Effect, Match, Option, Schema } from 'effect'
@@ -48,13 +49,6 @@ export interface TaggedErrorOptions {
 }
 
 /**
- * Helper type to extract the schema type from the tagged error.
- */
-type TaggedErrorSchema<F extends Schema.Struct.Fields | undefined = undefined> =
-  & Schema.Struct<Exclude<F, undefined>>
-  & Schema.Schema<Schema.Schema.Type<Schema.Struct<Exclude<F, undefined>>>, Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>, never>
-
-/**
  * Constructor type for the tagged error.
  *
  * If the schema is not provided, then the constructor
@@ -67,7 +61,7 @@ type TaggedErrorSchema<F extends Schema.Struct.Fields | undefined = undefined> =
 export type TaggedErrorConstructor<F extends Schema.Struct.Fields | undefined = undefined> =
   F extends undefined
     ? [message?: string, options?: TaggedErrorOptions]
-    : [data: Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>, message?: string, options?: TaggedErrorOptions]
+    : [data: Schema.Schema.Encoded<SchemaFromFields<F>>, message?: string, options?: TaggedErrorOptions]
 
 /**
  * Represents the internal configuration for the tagged error.
@@ -82,19 +76,19 @@ interface TaggedErrorInternals<F extends Schema.Struct.Fields | undefined = unde
    * It is used to validate the additional context that
    * can be passed to the error.
    */
-  schema?: TaggedErrorSchema<F>;
+  schema?: SchemaFromFields<F>;
 
   /**
    * Encoded data that is passed to the error
    * and must conform to the schema.
    */
-  data?: Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>;
+  data?: Schema.Schema.Encoded<SchemaFromFields<F>>;
 }
 
 function baseTaggedError<
   T extends string,
   F extends Schema.Struct.Fields | undefined = undefined,
->(tag: T, schema?: TaggedErrorSchema<F>) {
+>(tag: T, schema?: SchemaFromFields<F>) {
   class Base extends Data.Error {
     static get [ERROR_MARKER]() { return ERROR_MARKER }
 
@@ -162,7 +156,7 @@ function baseTaggedError<
        * the error.
        */
       if (isObject(messageOrData)) {
-        this[_internals].data = messageOrData as Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>
+        this[_internals].data = messageOrData as Schema.Schema.Encoded<SchemaFromFields<F>>
       } else {
         this[_internals].data = undefined
       }
@@ -256,7 +250,7 @@ function baseTaggedError<
                 const schemaToEncode = this[_internals].schema
                 return yield* Effect.suspend(() => Schema.encode(schemaToEncode)(data.value))
               }).pipe(Effect.runSync)
-        ) as F extends undefined ? undefined : Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>,
+        ) as F extends undefined ? undefined : Schema.Schema.Encoded<SchemaFromFields<F>>,
         stack: this.stack,
       }
     }
@@ -288,7 +282,7 @@ function baseTaggedError<
      *
      * @param updater The updater function that will update the data context.
      */
-    update(updater: F extends undefined ? never : (draft: Draft<Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>>) => void) {
+    update(updater: F extends undefined ? never : (draft: Draft<Schema.Schema.Encoded<SchemaFromFields<F>>>) => void) {
       if (isNullOrUndefined(this[_internals].schema) || isNullOrUndefined(this[_internals].data) || !isFunction(updater)) {
         return
       }
@@ -313,7 +307,7 @@ type BaseTaggedErrorInstanceType<T extends string, F extends Schema.Struct.Field
  * Options for creating a tagged error instance
  * using the `make` method.
  */
-type TaggedErrorMakeOptions<F extends Schema.Struct.Fields | undefined = undefined> = Spread<TaggedErrorDefaultOptions & { message?: string }, F extends undefined ? object : { data: Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>> }>
+type TaggedErrorMakeOptions<F extends Schema.Struct.Fields | undefined = undefined> = Spread<TaggedErrorDefaultOptions & { message?: string }, F extends undefined ? object : { data: Schema.Schema.Encoded<SchemaFromFields<F>> }>
 
 /**
  * Factory function to create a tagged error class with a
@@ -331,7 +325,7 @@ export function TaggedError<T extends string>(tag: T) {
    * @param options The default options for the tagged error.
    */
   return <F extends Schema.Struct.Fields | undefined = undefined>(
-    options: TaggedErrorDefaultOptions & { schema?: TaggedErrorSchema<F> },
+    options: TaggedErrorDefaultOptions & { schema?: SchemaFromFields<F> },
   ) => {
     class TaggedError extends baseTaggedError<typeof resolvedTag, F>(resolvedTag, options.schema) {
       constructor(...args: TaggedErrorConstructor<F>) {
@@ -389,4 +383,17 @@ export type ITaggedError<T extends string, F extends Schema.Struct.Fields | unde
  * Helper type to extract the additional context
  * from the tagged error.
  */
-export type InferTaggedErrorAdditionalContext<T extends TaggedError<any, any>> = T extends TaggedError<any, infer F> ? Schema.Schema.Type<Schema.Struct<Exclude<F, undefined>>> : never
+export type InferTaggedErrorAdditionalContext<T extends TaggedError<any, any>> = T extends TaggedError<any, infer F> ? Schema.Schema.Type<SchemaFromFields<F>> : never
+
+/**
+ * Helper type to extract the constructor parameters
+ * from the tagged error and convert them to parameters
+ * that can be used to create a tagged error instance from
+ * an unknown error.
+ */
+export type TaggedErrorFromUnknownErrorParameters<T extends TaggedError<any, any>> =
+  T extends TaggedError<any, infer F>
+    ? F extends undefined
+      ? [message?: string, options?: Omit<TaggedErrorOptions, 'cause'>]
+      : [data: Schema.Schema.Encoded<SchemaFromFields<F>>, message?: string, options?: Omit<TaggedErrorOptions, 'cause'>]
+    : never
