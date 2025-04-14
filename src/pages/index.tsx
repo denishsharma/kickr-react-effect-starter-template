@@ -30,6 +30,7 @@ function RootPage() {
         { name: 'Tailwind CSS', url: 'https://tailwindcss.com/' },
         { name: 'Iconify', url: 'https://iconify.design/' },
         { name: 'Unhead', url: 'https://unhead.unjs.io/' },
+        { name: 'Emittery', url: 'https://github.com/sindresorhus/emittery' },
         { name: 'Vite', url: 'https://vite.dev/' },
       ]}
     />

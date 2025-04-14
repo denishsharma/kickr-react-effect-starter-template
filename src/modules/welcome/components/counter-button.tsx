@@ -1,8 +1,12 @@
 import type { ReactComponentProps } from '~/core/react/types/react_component'
 import { Schema } from 'effect'
+import { useEffect } from 'react'
 import ReactComponent from '~/core/react/factories/react_component'
+import { runPromise } from '~/core/runtime/runtime_execution'
+import broadcastCountEvent from '~/modules/welcome/events/broadcast_count_event'
 
 const CounterButtonPropsSchema = Schema.Struct({
+  id: Schema.Literal('counter_one', 'counter_two'),
   defaultCount: Schema.optionalWith(Schema.Number, { nullable: true, default: () => 0 }),
 })
 
@@ -11,6 +15,19 @@ const CounterButtonLocalStateSchema = Schema.Struct({
 })
 
 const CounterButtonComponent = (props: ReactComponentProps<typeof CounterButtonPropsSchema.fields, typeof CounterButtonLocalStateSchema.fields>) => {
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      broadcastCountEvent.dispatch({
+        id: props.id,
+        count: props.state.value.count,
+      }).pipe(runPromise())
+    })
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [props.state.value.count]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <button
       type={'button'}
@@ -28,7 +45,7 @@ const CounterButtonComponent = (props: ReactComponentProps<typeof CounterButtonP
   )
 }
 
-const CounterButton = ReactComponent('counter_button')({
+const CounterButton = ReactComponent('welcome/counter_button')({
   props: {
     schema: CounterButtonPropsSchema,
   },
