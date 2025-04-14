@@ -52,6 +52,18 @@ const WelcomeComponent = (props: ReactComponentProps<typeof WelcomePropsSchema.f
               </a>
             </div>
           </div>
+
+          <div className={'flex items-center'}>
+            <a
+              href={props.credits.url}
+              target={'_blank'}
+              rel={'noreferrer'}
+              className={'size-8 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 flex items-center justify-center rounded-lg'}
+              title={'Repository on GitHub'}
+            >
+              <span className={'icon-[tabler--brand-github] size-5'} />
+            </a>
+          </div>
         </div>
 
         <div className={'h-px bg-gray-200 dark:bg-neutral-800 will-change-transform translate-z-0'} />
