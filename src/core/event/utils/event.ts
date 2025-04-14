@@ -29,7 +29,7 @@ export function handleEmitteryEvent<T extends string, A = never, I = never>(even
    * @param handler - The handler function to be called when the event is dispatched.
    * @param options - The options for the handler.
    */
-  return <E = never, O extends boolean = false>(...args: EventHandlerParameters<A, E, O>) => {
+  return <E = never>(...args: EventHandlerParameters<A, E>) => {
     const EventClass = event
     const eventInstance = new EventClass()
 
@@ -44,7 +44,7 @@ export function handleEmitteryEvent<T extends string, A = never, I = never>(even
  * @param handler - The handler function to be called when the event is dispatched.
  * @param options - The options for the handler.
  */
-export function useEmitteryEvent<T extends string, A = never, I = never, E = never, O extends boolean = false>(event: IEmitteryEvent<T, A, I>, ...args: EventHandlerParameters<A, E, O>) {
+export function useEmitteryEvent<T extends string, A = never, I = never, E = never>(event: IEmitteryEvent<T, A, I>, ...args: EventHandlerParameters<A, E>) {
   const EventClass = event
   const eventInstance = new EventClass()
 
