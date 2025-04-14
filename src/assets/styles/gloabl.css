@@ -1,8 +1,13 @@
 @import 'tailwindcss';
 
+@plugin '@iconify/tailwind4';
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
 @layer base {
   body {
-    @apply h-dvh w-full overflow-hidden flex flex-col;
+    @apply h-dvh w-full overflow-hidden flex flex-col dark:bg-neutral-900 dark:text-gray-50;
   }
 
   #__app_root__ {
