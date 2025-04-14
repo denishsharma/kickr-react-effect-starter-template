@@ -80,6 +80,8 @@ export default antfu(
 
       'import/no-cycle': ['error', { maxDepth: '∞' }],
 
+      'jsdoc/check-param-names': 'off',
+
       'node/handle-callback-err': ['error', '^(err|error)$'],
 
       'unicorn/throw-new-error': 'off',
