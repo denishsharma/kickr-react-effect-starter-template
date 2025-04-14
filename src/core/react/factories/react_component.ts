@@ -4,12 +4,12 @@ import type { ReactComponentProps, ReactComponentPropsWithoutLocalState } from '
 import type { R } from '~/core/runtime/runtime_execution'
 import type { SchemaFromFields } from '~/core/schema/type'
 import type SchemaParseError from '~/errors/schema_parse_error'
-import { Effect, Fiber } from 'effect'
+import { Effect } from 'effect'
 import { defaultTo, isEqual } from 'lodash-es'
 import { memo, useEffect } from 'react'
 import { _internals } from '~/core/constants/proto_marker'
 import useReactComponentInternals from '~/core/react/hooks/use_react_component_internals'
-import { runFork, runPromise } from '~/core/runtime/runtime_execution'
+import { runCallback, runPromise } from '~/core/runtime/runtime_execution'
 
 /**
  * Input type for the local store of the component.
@@ -89,12 +89,15 @@ export default function ReactComponent<
 
       useEffect(() => {
         const onMount = defaultTo(options.onMount, () => Effect.void)
-        const forked = onMount(componentProps).pipe(runFork())
+        const cancel = Effect.gen(function* () {
+          yield* onMount(componentProps)
+          yield* Effect.never
+        }).pipe(runCallback())
 
         return () => {
-          Effect.gen(function* () {
-            yield* Fiber.join(forked)
+          cancel()
 
+          Effect.gen(function* () {
             const onUnmount = defaultTo(options.onUnmount, () => Effect.void)
             yield* onUnmount(componentProps)
           }).pipe(runPromise())
