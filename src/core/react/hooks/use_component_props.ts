@@ -3,7 +3,7 @@ import type { R } from '~/core/runtime/runtime_execution'
 import type { SchemaFromFields } from '~/core/schema/type'
 import type SchemaParseError from '~/errors/schema_parse_error'
 import { Effect, Option, pipe, Schema } from 'effect'
-import { defaultTo } from 'lodash-es'
+import { cloneDeep, defaultTo } from 'lodash-es'
 import { useMemo } from 'react'
 import { toSchemaParseError } from '~/core/error/utils/error_conversion'
 import { runSync } from '~/core/runtime/runtime_execution'
@@ -77,6 +77,7 @@ export default function useComponentProps<
 
           return yield* error
         })),
+        Effect.map(cloneDeep),
       )
 
       const modifier = defaultTo(options.modifier, (props: Schema.Schema.Type<SchemaFromFields<F>>) => props)

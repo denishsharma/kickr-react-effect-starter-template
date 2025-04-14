@@ -1,6 +1,6 @@
 import type { Option, Schema } from 'effect'
 import type { ReactNode } from 'react'
-import type { ReactComponentProps } from '~/core/react/hooks/component_props'
+import type { ReactComponentProps } from '~/core/react/hooks/use_component_props'
 import type { R } from '~/core/runtime/runtime_execution'
 import type { SchemaFromFields } from '~/core/schema/type'
 import type SchemaParseError from '~/errors/schema_parse_error'
@@ -8,8 +8,8 @@ import { Effect, Fiber } from 'effect'
 import { defaultTo, isEqual } from 'lodash-es'
 import { memo, useEffect } from 'react'
 import { _internals } from '~/core/constants/proto_marker'
-import useComponentLocalStore from '~/core/react/hooks/component_local_store'
-import useComponentProps from '~/core/react/hooks/component_props'
+import useComponentLocalStore from '~/core/react/hooks/use_component_local_store'
+import useComponentProps from '~/core/react/hooks/use_component_props'
 import { runFork, runPromise } from '~/core/runtime/runtime_execution'
 
 /**
@@ -61,7 +61,7 @@ export default function ReactComponent<
     F extends Schema.Struct.Fields | undefined = undefined,
   >(options: ReactComponentOptions<S, F>) => {
     return memo(
-      (props: Schema.Schema.Encoded<Schema.Struct<Exclude<F, undefined>>>) => {
+      (props: Schema.Schema.Encoded<SchemaFromFields<F>>) => {
         const [store, updateStore] = useComponentLocalStore(
           options.store
             ? {
@@ -72,7 +72,7 @@ export default function ReactComponent<
         )
 
         const componentProps = useComponentProps({
-          props,
+          props: defaultTo(props, {} as Schema.Schema.Encoded<SchemaFromFields<F>>),
           schema: options.props.schema,
           store: {
             state: store,
