@@ -162,3 +162,9 @@ export function runFork<A, E>() {
     return ApplicationRuntime.runFork(scopedManageEffect(self))
   }
 }
+
+export function runCallback<A, E>() {
+  return (self: Effect.Effect<A, E, R>) => {
+    return ApplicationRuntime.runCallback(scopedManageEffect(self))
+  }
+}
