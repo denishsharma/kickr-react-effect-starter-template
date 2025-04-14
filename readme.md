@@ -22,7 +22,7 @@ Kickr is a React starter template designed to streamline the development of mode
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/denishsharma/kickr-react-effect-starter-template.git
    ```
 
 2. Install dependencies:
