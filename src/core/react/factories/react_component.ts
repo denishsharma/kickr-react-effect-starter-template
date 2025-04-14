@@ -1,6 +1,6 @@
 import type { Option, Schema } from 'effect'
 import type { ReactNode } from 'react'
-import type { ReactComponentProps } from '~/core/react/hooks/use_component_props'
+import type { ReactComponentProps, ReactComponentPropsWithoutLocalState } from '~/core/react/types/react_component'
 import type { R } from '~/core/runtime/runtime_execution'
 import type { SchemaFromFields } from '~/core/schema/type'
 import type SchemaParseError from '~/errors/schema_parse_error'
@@ -8,8 +8,7 @@ import { Effect, Fiber } from 'effect'
 import { defaultTo, isEqual } from 'lodash-es'
 import { memo, useEffect } from 'react'
 import { _internals } from '~/core/constants/proto_marker'
-import useComponentLocalStore from '~/core/react/hooks/use_component_local_store'
-import useComponentProps from '~/core/react/hooks/use_component_props'
+import useReactComponentInternals from '~/core/react/hooks/use_react_component_internals'
 import { runFork, runPromise } from '~/core/runtime/runtime_execution'
 
 /**
@@ -39,9 +38,9 @@ export interface ReactComponentOptions<
     onSchemaParseError?: (props: Schema.Schema.Encoded<SchemaFromFields<F>>, error: SchemaParseError) => Effect.Effect<Option.Option<Schema.Schema.Type<SchemaFromFields<F>>>, never, R>;
   };
   component: (props: ReactComponentProps<F, S>) => ReactNode;
-  store?: {
+  state?: {
     schema: SchemaFromFields<S>;
-    initial: Schema.Schema.Encoded<Schema.Struct<Exclude<S, undefined>>>;
+    initial: Schema.Schema.Encoded<Schema.Struct<Exclude<S, undefined>>> | ((props: ReactComponentPropsWithoutLocalState<F>) => Schema.Schema.Encoded<Schema.Struct<Exclude<S, undefined>>>);
   };
   onMount?: (props: ReactComponentProps<F, S>) => Effect.Effect<void, never, R>;
   onUnmount?: (props: ReactComponentProps<F, S>) => Effect.Effect<void, never, R>;
@@ -60,24 +59,13 @@ export default function ReactComponent<
     S extends Schema.Struct.Fields | undefined = undefined,
     F extends Schema.Struct.Fields | undefined = undefined,
   >(options: ReactComponentOptions<S, F>) => {
-    return memo(
-      (props: Schema.Schema.Encoded<SchemaFromFields<F>>) => {
-        const [store, updateStore] = useComponentLocalStore(
-          options.store
-            ? {
-                schema: options.store.schema,
-                initial: options.store.initial,
-              }
-            : undefined,
-        )
+    const resolvedTag = `@component/${tag}`
 
-        const componentProps = useComponentProps({
-          props: defaultTo(props, {} as Schema.Schema.Encoded<SchemaFromFields<F>>),
+    const Component = (props: Schema.Schema.Encoded<SchemaFromFields<F>>) => {
+      const { props: componentProps } = useReactComponentInternals({
+        props: {
           schema: options.props.schema,
-          store: {
-            state: store,
-            updateStore,
-          },
+          value: props,
           modifier: (props) => {
             Object.defineProperty(props, _internals, {
               value: {
@@ -90,25 +78,41 @@ export default function ReactComponent<
             return props
           },
           onSchemaParseError: options.props.onSchemaParseError,
-        })
+        },
+        state: options.state
+          ? {
+              schema: options.state.schema,
+              initial: options.state.initial,
+            }
+          : undefined,
+      })
 
-        useEffect(() => {
-          const onMount = defaultTo(options.onMount, () => Effect.void)
-          const forked = onMount(componentProps).pipe(runFork())
+      useEffect(() => {
+        const onMount = defaultTo(options.onMount, () => Effect.void)
+        const forked = onMount(componentProps).pipe(runFork())
 
-          return () => {
-            Effect.gen(function* () {
-              yield* Fiber.join(forked)
+        return () => {
+          Effect.gen(function* () {
+            yield* Fiber.join(forked)
 
-              const onUnmount = defaultTo(options.onUnmount, () => Effect.void)
-              yield* onUnmount(componentProps)
-            }).pipe(runPromise())
-          }
-        }, []) // eslint-disable-line react-hooks/exhaustive-deps -- this should only run once
+            const onUnmount = defaultTo(options.onUnmount, () => Effect.void)
+            yield* onUnmount(componentProps)
+          }).pipe(runPromise())
+        }
+      }, []) // eslint-disable-line react-hooks/exhaustive-deps -- this should only run once
 
-        return options.component(componentProps)
-      },
+      return options.component(componentProps)
+    }
+
+    Component.displayName = resolvedTag
+
+    const memoizedComponent = memo(
+      Component,
       (prevProps, nextProps) => isEqual(prevProps, nextProps),
     )
+
+    memoizedComponent.displayName = `memo(memoized<${resolvedTag}>)`
+
+    return memoizedComponent
   }
 }
