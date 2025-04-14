@@ -8,6 +8,8 @@ export const ERROR_CODE = Enum({
   E_SCHEMA_PARSE_ERROR: 'E_SCHEMA_PARSE_ERROR',
   E_UNKNOWN_ERROR: 'E_UNKNOWN_ERROR',
   E_UNEXPECTED_RUNTIME_EXIT_RESULT: 'E_UNEXPECTED_RUNTIME_EXIT_RESULT',
+  E_EVENT_DISPATCH: 'E_EVENT_DISPATCH',
+  E_EVENT_HANDLER: 'E_EVENT_HANDLER',
 })
 
 export type ErrorCode = InferValue<typeof ERROR_CODE>
@@ -30,5 +32,11 @@ export const ERROR_CODE_METADATA: Record<ErrorCode, ErrorCodeMetadata> = {
   },
   [ErrorCode.E_UNEXPECTED_RUNTIME_EXIT_RESULT]: {
     message: 'Unexpected runtime exit result returned from the application runtime and not able to be handled.',
+  },
+  [ErrorCode.E_EVENT_DISPATCH]: {
+    message: 'Unexpected error occurred while emitting the event.',
+  },
+  [ErrorCode.E_EVENT_HANDLER]: {
+    message: 'Unexpected error occurred while handling the event.',
   },
 }
