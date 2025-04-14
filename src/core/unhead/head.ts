@@ -10,6 +10,16 @@ const head = createHead({
       titleTemplate(title) {
         return title ? `${title} - Kickr` : 'Kickr'
       },
+      link: [
+        {
+          rel: 'preconnect',
+          href: 'https://rsms.me/',
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://rsms.me/inter/inter.css',
+        },
+      ],
     },
   ],
 })

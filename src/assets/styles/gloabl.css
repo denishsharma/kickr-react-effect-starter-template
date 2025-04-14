@@ -1,13 +1,18 @@
 @import 'tailwindcss';
 
+@plugin "tailwindcss-motion";
 @plugin '@iconify/tailwind4';
 
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
+@theme default {
+  --default-font-family: 'Inter', sans-serif;
+}
+
 @layer base {
   body {
-    @apply h-dvh w-full overflow-hidden flex flex-col dark:bg-neutral-900 dark:text-gray-50;
+    @apply h-dvh w-full overflow-hidden flex flex-col bg-neutral-50 text-gray-900 dark:bg-[color-mix(in_oklab,var(--color-neutral-900)_50%,var(--color-neutral-950))] dark:text-neutral-200;
   }
 
   #__app_root__ {

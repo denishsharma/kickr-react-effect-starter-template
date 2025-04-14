@@ -1,4 +1,3 @@
-import type { PluginOption } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite as tanStackRouter } from '@tanstack/router-plugin/vite'
@@ -11,7 +10,6 @@ export default defineConfig({
     alias: [{ find: '~', replacement: fileURLToPath(new URL('./src', import.meta.url)) }],
   },
   plugins: [
-    tailwindcss() as PluginOption,
     tanStackRouter({
       quoteStyle: 'single',
       semicolons: false,
@@ -21,6 +19,7 @@ export default defineConfig({
       generatedRouteTree: './.generated/routeTree.gen.ts',
     }),
     react(),
+    tailwindcss(),
     unhead(),
   ],
 })

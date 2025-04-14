@@ -1,13 +1,37 @@
 import { createFileRoute } from '@tanstack/react-router'
+import Welcome from '~/modules/welcome/welcome'
 
 export const Route = createFileRoute('/')({
-  component: RouteComponent,
+  component: RootPage,
 })
 
-function RouteComponent() {
+function RootPage() {
   return (
-    <div>
-      Hello World
-    </div>
+    <Welcome
+      credits={{
+        name: 'Denish Sharma',
+        url: 'https://github.com/denishsharma/kickr-react-effect-starter-template',
+        socials: {
+          github: {
+            url: 'https://github.com/denishsharma',
+            icon: 'icon-[tabler--brand-github]',
+          },
+          linkedin: {
+            url: 'https://www.linkedin.com/in/denishsharma',
+            icon: 'icon-[tabler--brand-linkedin]',
+          },
+        },
+      }}
+      technologies={[
+        { name: 'React', url: 'https://react.dev/' },
+        { name: 'Effect', url: 'https://effect.website/' },
+        { name: 'Jotai', url: 'https://jotai.org/' },
+        { name: 'TanStack Router', url: 'https://tanstack.com/router/' },
+        { name: 'Tailwind CSS', url: 'https://tailwindcss.com/' },
+        { name: 'Iconify', url: 'https://iconify.design/' },
+        { name: 'Unhead', url: 'https://unhead.unjs.io/' },
+        { name: 'Vite', url: 'https://vite.dev/' },
+      ]}
+    />
   )
 }
