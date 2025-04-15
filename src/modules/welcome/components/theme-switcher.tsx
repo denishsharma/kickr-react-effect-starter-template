@@ -2,7 +2,8 @@ import { Schema } from 'effect'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import ReactComponent from '~/core/react/factories/react_component'
 import cn from '~/core/tailwind/cn'
-import useThemeSwitcher, { ApplicationTheme } from '~/hooks/use_theme_switcher'
+import { ApplicationTheme } from '~/core/theme/constants/application_theme'
+import useThemeSwitcher from '~/core/theme/hooks/use_theme_switcher'
 
 const APPLICATION_THEME_CHOICE = [
   {

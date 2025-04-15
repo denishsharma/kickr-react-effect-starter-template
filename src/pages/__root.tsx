@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useEffect } from 'react'
-import useThemeSwitcher from '~/hooks/use_theme_switcher'
+import useThemeSwitcher from '~/core/theme/hooks/use_theme_switcher'
 
 export const Route = createRootRoute({
   component: RootLayout,
